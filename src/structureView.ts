@@ -5,17 +5,22 @@ export class StructureTreeProvider implements vscode.TreeDataProvider<StructureI
   private _onDidChangeTreeData: vscode.EventEmitter<StructureItem | undefined | void> = new vscode.EventEmitter<StructureItem | undefined | void>();
   readonly onDidChangeTreeData: vscode.Event<StructureItem | undefined | void> = this._onDidChangeTreeData.event;
 
-  constructor() {}
+  constructor() {
+    console.log("[DEBUG] StructureTreeProvider initialized");
+  }
 
   refresh(): void {
+    console.log("[DEBUG] StructureTreeProvider refreshed");
     this._onDidChangeTreeData.fire();
   }
 
   getTreeItem(element: StructureItem): vscode.TreeItem {
+    console.log("[DEBUG] getTreeItem:", element.label);
     return element;
   }
 
   getChildren(element?: StructureItem): Thenable<StructureItem[]> {
+    console.log("[DEBUG] getChildren:", element?.label ?? "root");
     if (!element) {
       return Promise.resolve(this.parseStructure());
     }
@@ -24,7 +29,9 @@ export class StructureTreeProvider implements vscode.TreeDataProvider<StructureI
 
   private parseStructure(): StructureItem[] {
     const editor = vscode.window.activeTextEditor;
-    if (!editor) return [];
+    if (!editor) {
+      return [];
+    }
 
     const project = new Project();
     const sourceFile = project.createSourceFile("temp.ts", editor.document.getText(), { overwrite: true });

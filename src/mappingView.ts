@@ -5,17 +5,23 @@ export class MappingTreeProvider implements vscode.TreeDataProvider<StructureIte
   private _onDidChangeTreeData: vscode.EventEmitter<StructureItem | undefined | void> = new vscode.EventEmitter<StructureItem | undefined | void>();
   readonly onDidChangeTreeData: vscode.Event<StructureItem | undefined | void> = this._onDidChangeTreeData.event;
 
-  constructor() {}
+  constructor() {
+    console.log("[DEBUG] MappingTreeProvider initialized");
+  }
 
   refresh(): void {
+    console.log("[DEBUG] MappingTreeProvider refreshed");
     this._onDidChangeTreeData.fire();
   }
 
   getTreeItem(element: StructureItem): vscode.TreeItem {
+    console.log("[DEBUG] MappingTreeProvider getTreeItem:", element.label);
     return element;
   }
 
   getChildren(element?: StructureItem): Thenable<StructureItem[]> {
+    console.log("[DEBUG] MappingTreeProvider getChildren:", element?.label ?? "root");
+
     if (!element) {
       return Promise.resolve(this.findMappings());
     }
