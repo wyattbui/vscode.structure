@@ -12,10 +12,50 @@
   "activationEvents": [],
   "main": "./out/extension.js",
   "contributes": {
-    "commands": [
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "structureView",
+          "title": "Structure",
+          "icon": "resources/structure-icon.svg"
+        },
+        {
+          "id": "mappingView",
+          "title": "Mapping",
+          "icon": "resources/mapping-icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "structureView": [
+        {
+          "id": "structureTree",
+          "name": "Structure Tree",
+          "icon": "resources/structure-icon.svg"
+        }
+      ],
+      "mappingView": [
+        {
+          "id": "mappingTree",
+          "name": "DTO ↔ Entity Mapping",
+          "icon": "resources/mapping-icon.svg"
+        }
+      ]
+    }
+  },
+  "views": {
+    "structureView": [
       {
-        "command": "structure.helloWorld",
-        "title": "Hello World"
+        "id": "structureTree",
+        "name": "Structure Tree",
+        "icon": "resources/structure-icon.svg"
+      }
+    ],
+    "mappingView": [
+      {
+        "id": "mappingTree",
+        "name": "DTO ↔ Entity Mapping",
+        "icon": "resources/mapping-icon.svg"
       }
     ]
   },
@@ -28,14 +68,17 @@
     "test": "vscode-test"
   },
   "devDependencies": {
-    "@types/vscode": "^1.98.0",
     "@types/mocha": "^10.0.10",
     "@types/node": "20.x",
+    "@types/vscode": "^1.98.0",
     "@typescript-eslint/eslint-plugin": "^8.25.0",
     "@typescript-eslint/parser": "^8.25.0",
-    "eslint": "^9.21.0",
-    "typescript": "^5.7.3",
     "@vscode/test-cli": "^0.0.10",
-    "@vscode/test-electron": "^2.4.1"
+    "@vscode/test-electron": "^2.4.1",
+    "eslint": "^9.21.0",
+    "typescript": "^5.8.2"
+  },
+  "dependencies": {
+    "ts-morph": "^25.0.1"
   }
 }
