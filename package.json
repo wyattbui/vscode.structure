@@ -35,37 +35,39 @@
         }
       ]
     },
-    "commands": [
-      {
-        "command": "structureView.showEntityDetails",
-        "title": "Show Entity Details"
-      },
-      {
-        "command": "structureView.refresh",
-        "title": "Refresh Structure View"
-      },
+   "commands": [
+    {
+      "command": "structureView.pinEntity",
+      "title": "📌 Pin Entity/DTO"
+    },
+    {
+      "command": "structureView.unpinEntity",
+      "title": "❌ Unpin Entity/DTO"
+    },
+    {
+      "command": "structureView.selectForComparison",
+      "title": "🔍 Select for Comparison"
+    }
+  ],
+  "menus": {
+    "view/item/context": [
       {
         "command": "structureView.pinEntity",
-        "title": "📌 Pin Entity/DTO"
+        "when": "view == structureTree && !view.hasPinnedItems",
+        "group": "navigation"
       },
       {
         "command": "structureView.unpinEntity",
-        "title": "❌ Unpin Entity/DTO"
+        "when": "view == structureTree && view.hasPinnedItems",
+        "group": "navigation"
       },
       {
         "command": "structureView.selectForComparison",
-        "title": "🔍 Select for Comparison"
+        "when": "view == structureTree",
+        "group": "navigation"
       }
     ]
-  },
-  "views": {
-    "structureView": [
-      {
-        "id": "structureTree",
-        "name": "Structure Tree",
-        "icon": "resources/structure-icon.svg"
-      }
-    ]
+  }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
