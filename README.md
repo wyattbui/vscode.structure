@@ -12,3 +12,16 @@ This extension provides a structure view for JavaScript and TypeScript files in 
 - The "Structure" and "Mapping" views will appear in the sidebar.
 
 ## Installat
+
+```
+npm install
+npm run compile
+```
+
+```
+vsce package                                           
+```
+
+```
+code --install-extension structure-0.0.1.vsix  
+```

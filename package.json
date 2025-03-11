@@ -33,15 +33,30 @@
           "name": "Structure Tree",
           "icon": "resources/structure-icon.svg"
         }
-      ],
-      "mappingView": [
-        {
-          "id": "mappingTree",
-          "name": "DTO ↔ Entity Mapping",
-          "icon": "resources/mapping-icon.svg"
-        }
       ]
-    }
+    },
+    "commands": [
+      {
+        "command": "structureView.showEntityDetails",
+        "title": "Show Entity Details"
+      },
+      {
+        "command": "structureView.refresh",
+        "title": "Refresh Structure View"
+      },
+      {
+        "command": "structureView.pinEntity",
+        "title": "📌 Pin Entity/DTO"
+      },
+      {
+        "command": "structureView.unpinEntity",
+        "title": "❌ Unpin Entity/DTO"
+      },
+      {
+        "command": "structureView.selectForComparison",
+        "title": "🔍 Select for Comparison"
+      }
+    ]
   },
   "views": {
     "structureView": [
@@ -49,13 +64,6 @@
         "id": "structureTree",
         "name": "Structure Tree",
         "icon": "resources/structure-icon.svg"
-      }
-    ],
-    "mappingView": [
-      {
-        "id": "mappingTree",
-        "name": "DTO ↔ Entity Mapping",
-        "icon": "resources/mapping-icon.svg"
       }
     ]
   },
