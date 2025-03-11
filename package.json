@@ -47,22 +47,33 @@
     {
       "command": "structureView.selectForComparison",
       "title": "🔍 Select for Comparison"
+    },
+    {
+      "command": "structureView.refresh",
+      "title": "🔄 Refresh Structure View"
     }
   ],
   "menus": {
     "view/item/context": [
       {
         "command": "structureView.pinEntity",
-        "when": "view == structureTree && !view.hasPinnedItems",
+        "when": "view == structureTree && resourceContext != pinned",
         "group": "navigation"
       },
       {
         "command": "structureView.unpinEntity",
-        "when": "view == structureTree && view.hasPinnedItems",
+        "when": "view == structureTree && resourceContext == pinned",
         "group": "navigation"
       },
       {
         "command": "structureView.selectForComparison",
+        "when": "view == structureTree",
+        "group": "navigation"
+      }
+    ],
+    "view/title": [
+      {
+        "command": "structureView.refresh",
         "when": "view == structureTree",
         "group": "navigation"
       }
