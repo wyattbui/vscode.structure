@@ -7,11 +7,6 @@ import {
   SyntaxKind,
 } from "ts-morph";
 
-export enum TEST {
-  Enum1 = 1,
-  Enum2 = 2,
-}
-
 export class StructureTreeProvider
   implements vscode.TreeDataProvider<StructureItem>
 {
@@ -22,19 +17,17 @@ export class StructureTreeProvider
     this._onDidChangeTreeData.event;
 
   private currentFilePath: string | null = null;
-  private selectedStructures: StructureItem[] = []; // Lưu trữ DTO/Entity từ vùng chọn
   private selectedComparisons: StructureItem[] = []; // Lưu danh sách các DTO/Entity được chọn để so sánh
+  private hasCompare = false;
   private allEntities: StructureItem[] = []; // Lưu trữ tất cả DTO/Entity
   private filteredEntities: StructureItem[] = []; // Lưu trữ kết quả lọc
   private filterText: string | null = null; // Chuỗi tìm kiếm hiện tại
-  private searchResults: vscode.Position[] = []; // Lưu trữ danh sách vị trí tìm thấy
   private searchIndexMap: Map<string, number> = new Map(); // Lưu vị trí hiện tại của từng class
 
   private pinnedEntities: Map<string, StructureItem> = new Map();
   private project = new Project();
 
   constructor() {
-    console.log(this.currentFilePath);
     if (!this.currentFilePath) {
       const editor = vscode.window.activeTextEditor;
       if (editor) {
@@ -57,14 +50,19 @@ export class StructureTreeProvider
   }
 
   refresh(): void {
-    this._onDidChangeTreeData.fire();
+    if (!this.allEntities || this.allEntities.length === 0) {
+      console.warn("⚠️ No entities found. Skipping refresh.");
+      return;
+    }
+  
+    setTimeout(() => this._onDidChangeTreeData.fire(), 100); // ✅ Tránh lỗi UI bị treo
   }
 
   /** 🔄 Refresh Structure View - Reset toàn bộ trạng thái */
   refreshStructure(): void {
     this.pinnedEntities.clear();
     this.selectedComparisons = [];
-    this.selectedStructures = [];
+    this.hasCompare = false;
     this.refresh();
   }
 
@@ -109,22 +107,96 @@ export class StructureTreeProvider
 
   /** 🔍 Thêm Entity vào danh sách so sánh */
   addEntityToComparison(entity: StructureItem) {
-    if (!entity.label) return;
-    const label = entity.label.toString();
-    if (!this.selectedComparisons.some((item) => item.label === label)) {
-      const comparisonEntity = new StructureItem(
-        `🔍 ${entity.label}`,
-        vscode.TreeItemCollapsibleState.Collapsed,
-        "compare"
-      );
-      comparisonEntity.children = entity.children;
-      this.selectedComparisons.push(comparisonEntity);
-      this.refresh();
+    if (!entity.label) {
+      console.warn("⚠️ Entity has no label!");
+      return;
     }
+  
+    if (entity.contextValue === "folder") {
+      console.warn("⚠️ Skipping folder:", entity.label);
+      return;
+    }
+  
+    const rawLabel = entity.label.toString().replace(/^🔍 📦\s*/, ""); // ✅ Xóa tiền tố "🔍 📦 "
+  
+    // Kiểm tra xem entity đã tồn tại trong danh sách chưa
+    if (this.selectedComparisons.some((item) => item.label?.replace(/^🔍 📦\s*/, "") === rawLabel)) {
+      console.warn("⚠️ Entity already exists in comparison list!");
+      return;
+    }
+  
+    if (this.hasCompare || this.selectedComparisons.length >= 2) {
+      this.selectedComparisons = []; // clear
+      this.hasCompare = false;
+      this.addEntityToComparison(entity);
+      this.refresh();
+      return;
+    }
+  
+    const comparisonEntity = new StructureItem(
+      `🔍 ${rawLabel}`,
+      vscode.TreeItemCollapsibleState.Collapsed,
+      "compare"
+    );
+    comparisonEntity.children = entity.children;
+  
+    this.selectedComparisons.push(comparisonEntity);
+  
+    if(this.selectedComparisons.length === 2) {
+      this.compareEntities();
+    }
+    this.refresh();
   }
-
+  
+  compareEntities() {
+    if (this.selectedComparisons.length !== 2) {
+      console.warn("⚠️ Need exactly 2 entities to compare!");
+      return;
+    }
+  
+    const [entityA, entityB] = this.selectedComparisons;
+  
+    // Lấy danh sách thuộc tính của từng entity
+    const propertiesA = new Set(entityA.children.map((child) => child.label));
+    const propertiesB = new Set(entityB.children.map((child) => child.label));
+  
+    // ✅ Thuộc tính giống nhau
+    const commonProperties = [...propertiesA].filter((prop) => propertiesB.has(prop));
+  
+    // ✅ Thuộc tính khác nhau
+    const uniqueA = [...propertiesA].filter((prop) => !propertiesB.has(prop));
+    const uniqueB = [...propertiesB].filter((prop) => !propertiesA.has(prop));
+  
+    // ✅ Hiển thị kết quả trong Tree View
+    const comparisonResult = new StructureItem(
+      "🔍 Comparison Result",
+      vscode.TreeItemCollapsibleState.Expanded,
+      "comparison"
+    );
+  
+    comparisonResult.children = [
+      new StructureItem(`✅ Common Properties (${commonProperties.length})`, vscode.TreeItemCollapsibleState.Collapsed, "common"),
+      ...commonProperties.map((prop) => new StructureItem(`✔️ ${prop}`, vscode.TreeItemCollapsibleState.None, "property")),
+  
+      new StructureItem(`󠁯 ${entityA.label} (${uniqueA.length})`, vscode.TreeItemCollapsibleState.Collapsed, "uniqueA"),
+      ...uniqueA.map((prop) => new StructureItem(`${prop}`, vscode.TreeItemCollapsibleState.None, "property")),
+  
+      new StructureItem(`${entityB.label} (${uniqueB.length})`, vscode.TreeItemCollapsibleState.Collapsed, "uniqueB"),
+      ...uniqueB.map((prop) => new StructureItem(`${prop}`, vscode.TreeItemCollapsibleState.None, "property")),
+    ];
+  
+    this.selectedComparisons = [comparisonResult]; // ✅ Thay danh sách so sánh bằng kết quả
+    this.hasCompare = true;
+    this.refresh();
+  }
+  
+  clearComparison() {
+    this.selectedComparisons = []; // ✅ Xóa toàn bộ danh sách so sánh
+    this.refresh();
+  }
+  
+  
   clearFilter() {
-    console.log("🚀 Clearing filter...");
     this.filterText = null;
     this.filteredEntities = this.allEntities; // Reset danh sách về trạng thái ban đầu
     this.refresh();
@@ -143,7 +215,6 @@ export class StructureTreeProvider
 
     // Nếu có văn bản được chọn, sử dụng luôn để lọc
     if (selectedText) {
-      console.log("🔍 Filtering by selected text:", selectedText);
       this.applyFilter(selectedText);
       return;
     }
@@ -156,7 +227,6 @@ export class StructureTreeProvider
       })
       .then((input) => {
         if (!input) {
-          console.log("❌ No input provided");
           return;
         }
         this.applyFilter(input.trim());
@@ -166,8 +236,6 @@ export class StructureTreeProvider
   /** ✅ Hàm riêng để áp dụng bộ lọc */
   private applyFilter(filterText: string) {
     this.filterText = filterText.toLowerCase();
-    console.log("📌 Applying filter:", this.filterText);
-
     if (this.filterText === "") {
       this.filteredEntities = this.allEntities;
     } else {
@@ -201,7 +269,6 @@ export class StructureTreeProvider
         .filter(Boolean) as StructureItem[];
     }
 
-    console.log("✅ Filtered Entities:", this.filteredEntities);
     this.refresh();
   }
 
@@ -253,50 +320,32 @@ export class StructureTreeProvider
         );
         entityItem.children = entityDetails;
         entityItem.contextValue = "entity";
-        this.selectedStructures = [entityItem];
         this.refresh();
       }
     }
   }
 
   getTreeItem(element: StructureItem): vscode.TreeItem {
-    console.log(`🔍 Item: ${element.label}, Context: ${element.contextValue}`);
     return element;
   }
 
   getChildren(element?: StructureItem): Thenable<StructureItem[]> {
     if (!this.currentFilePath) {
+      console.warn("⚠️ No active file. Returning empty tree.");
       return Promise.resolve([
-        new StructureItem(
-          "📂 Open a TypeScript file to view structure",
-          vscode.TreeItemCollapsibleState.None,
-          "info"
-        ),
+        new StructureItem("📂 Open a TypeScript file", vscode.TreeItemCollapsibleState.None, "info")
       ]);
     }
 
     if (!element) {
-      // return Promise.resolve(
-      //   this.filterText ? this.filteredEntities : this.allEntities
-      // );
-
       let rootItems = [
         ...this.pinnedEntities.values(),
         ...this.parseStructure(this.currentFilePath),
       ];
 
+      // ✅ Hiển thị kết quả so sánh nếu có
       if (this.selectedComparisons.length > 0) {
-        const comparisonRoot = new StructureItem(
-          `🔍 Comparison Results`,
-          vscode.TreeItemCollapsibleState.Expanded,
-          "compare-root"
-        );
-        comparisonRoot.children = this.selectedComparisons;
-        rootItems.push(comparisonRoot);
-
-        return Promise.resolve(
-          this.filterText ? this.filteredEntities : this.allEntities
-        );
+        rootItems.push(...this.selectedComparisons);
       }
 
       return Promise.resolve(rootItems);
@@ -332,8 +381,6 @@ export class StructureTreeProvider
       return;
     }
 
-    // ✅ Lưu danh sách vị trí của class này nếu chưa có
-    this.searchResults = searchResults;
     if (!this.searchIndexMap.has(className)) {
       this.searchIndexMap.set(className, 0);
     }
@@ -412,10 +459,6 @@ export class StructureTreeProvider
       });
     });
 
-    console.log("-----------------------------------------------");
-    console.log("groupedItem", groupedItems);
-    console.log("-----------------------------------------------");
-
     // ✅ Sắp xếp danh sách theo nhóm
     Object.keys(groupedItems).forEach((group) => {
       if (groupedItems[group].length > 0) {
@@ -428,10 +471,6 @@ export class StructureTreeProvider
         structure.push(groupItem);
       }
     });
-
-    console.log("-----------------------------------------------");
-    console.log("parse structure: structure", structure);
-    console.log("-----------------------------------------------");
 
     this.allEntities = structure; // ✅ Lưu toàn bộ danh sách DTO/Entity để lọc
     return structure;
@@ -483,4 +522,4 @@ export class StructureItem extends vscode.TreeItem {
   }
 }
 // TODO: check compare not work
-// TODO: unpin not work
+// TODO: data type -> in nghieng -> mau xam

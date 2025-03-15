@@ -1,12 +1,9 @@
 import * as vscode from "vscode";
-import { StructureTreeProvider, StructureItem,TEST } from "./structureView";
-console.log(TEST.Enum1)
+import { StructureTreeProvider, StructureItem } from "./structureView";
 
 export function activate(context: vscode.ExtensionContext) {
   let structureProvider = new StructureTreeProvider();
   vscode.window.registerTreeDataProvider("structureTree", structureProvider);
-
-  let selectedEntities: StructureItem[] = [];
 
   context.subscriptions.push(
     vscode.commands.registerCommand("structureView.filterEntity", (entity: StructureItem) => {
@@ -27,9 +24,11 @@ export function activate(context: vscode.ExtensionContext) {
       if (!entity) return;
       structureProvider.unpinEntity(entity);
     }),
-
     vscode.commands.registerCommand("structureView.selectForComparison", (entity: StructureItem) => {
       if (!entity) return;
+      structureProvider.addEntityToComparison(entity);
+    }),
+    vscode.commands.registerCommand("structureView.addEntityToComparison", (entity: StructureItem) => {
       structureProvider.addEntityToComparison(entity);
     }),
     vscode.commands.registerCommand("structureView.loadFromSelection", () => {

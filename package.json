@@ -39,88 +39,89 @@
         }
       ]
     },
-   "commands": [
-    {
-      "command": "structureView.refresh",
-      "title": "🔄 Refresh Structure"
-    },
-    {
-      "command": "structureView.filterEntity",
-      "title": "🔍 Filter"
-    },
-    {
-      "command": "structureView.clearFilter",
-      "title": "🧹 Clear Filter"
-    },
-    {
-      "command": "structureView.pinEntity",
-      "title": "📌 Pin structure"
-    },
-    {
-      "command": "structureView.unpinEntity",
-      "title": "❌ Unpin structure"
-    },
-    {
-      "command": "structureView.selectForComparison",
-      "title": "🔀 Select for Comparison"
-    },
-    {
-      "command": "structureView.searchInCurrentFile",
-      "title": "🔍 Search Class in Current File"
-    }
-  ],
-  "menus": {
-    "commandPalette": [
+    "commands": [
+      {
+        "command": "structureView.refresh",
+        "title": "🔄 Refresh Structure"
+      },
       {
         "command": "structureView.filterEntity",
-        "title": "Filter Entities by Name"
+        "title": "🔍 Filter"
       },
       {
         "command": "structureView.clearFilter",
-        "title": "Clear Filter"
-      }
-    ],
-    "view/item/context": [
+        "title": "🧹 Clear Filter"
+      },
       {
         "command": "structureView.pinEntity",
-        "when": "view == structureTree && viewItem != pinned",
-        "group": "navigation"
+        "title": "📌 Pin structure"
       },
       {
         "command": "structureView.unpinEntity",
-        "when": "view == structureTree && viewItem  == pinned",
-        "group": "navigation"
+        "title": "❌ Unpin structure"
       },
       {
         "command": "structureView.selectForComparison",
-        "when": "view == structureTree",
-        "group": "navigation"
-      }
-    ],
-    "view/title": [
-      {
-        "command": "structureView.refresh",
-        "when": "view == structureTree",
-        "group": "navigation"
+        "title": "👉 Select for Comparison"
       },
       {
-        "command": "structureView.filterEntity",
-        "when": "view == structureTree",
-        "group": "navigation"
-      },
-      {
-        "command": "structureView.clearFilter",
-        "when": "view == structureTree",
-        "group": "navigation"
+        "command": "structureView.searchInCurrentFile",
+        "title": "🔍 Search Class in Current File"
       }
     ],
-    "editor/context": [
-      {
-        "command": "structureView.filterEntity",
-        "title": "Filter Entities by Name"
-      }
-    ]
-  }
+    "menus": {
+      "commandPalette": [
+        {
+          "command": "structureView.filterEntity",
+          "title": "Filter Entities by Name"
+        },
+        {
+          "command": "structureView.clearFilter",
+          "title": "Clear Filter"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "structureView.pinEntity",
+          "when": "view == structureTree && viewItem != pinned",
+          "group": "navigation"
+        },
+        {
+          "command": "structureView.unpinEntity",
+          "when": "view == structureTree && viewItem  == pinned",
+          "group": "navigation"
+        },
+        {
+          "command": "structureView.selectForComparison",
+          "title": "Compare with Another Entity",
+          "when": "view == structureTree && resourceContext != compare",
+          "group": "navigation"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "structureView.refresh",
+          "when": "view == structureTree",
+          "group": "navigation"
+        },
+        {
+          "command": "structureView.filterEntity",
+          "when": "view == structureTree",
+          "group": "navigation"
+        },
+        {
+          "command": "structureView.clearFilter",
+          "when": "view == structureTree",
+          "group": "navigation"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "structureView.filterEntity",
+          "title": "Filter Entities by Name"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "npm run compile",
@@ -131,6 +132,7 @@
     "test": "vscode-test"
   },
   "devDependencies": {
+    "@types/chalk": "^2.2.4",
     "@types/mocha": "^10.0.10",
     "@types/node": "^20.17.24",
     "@types/vscode": "^1.98.0",
