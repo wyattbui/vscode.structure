@@ -7,6 +7,11 @@ import {
   SyntaxKind,
 } from "ts-morph";
 
+export enum TEST {
+  Enum1 = 1,
+  Enum2 = 2
+}
+
 export class StructureTreeProvider
   implements vscode.TreeDataProvider<StructureItem>
 {
@@ -19,10 +24,24 @@ export class StructureTreeProvider
   private currentFilePath: string | null = null;
   private selectedStructures: StructureItem[] = []; // Lưu trữ DTO/Entity từ vùng chọn
   private selectedComparisons: StructureItem[] = []; // Lưu danh sách các DTO/Entity được chọn để so sánh
+  private allEntities: StructureItem[] = []; // Lưu trữ tất cả DTO/Entity
+  private filteredEntities: StructureItem[] = []; // Lưu trữ kết quả lọc
+  private filterText: string | null = null; // Chuỗi tìm kiếm hiện tại
+  private searchResults: vscode.Position[] = []; // Lưu trữ danh sách vị trí tìm thấy
+  private searchIndexMap: Map<string, number> = new Map(); // Lưu vị trí hiện tại của từng class
+
   private pinnedEntities: Map<string, StructureItem> = new Map();
   private project = new Project();
 
   constructor() {
+    console.log(this.currentFilePath);
+    if(!this.currentFilePath) {
+      const editor = vscode.window.activeTextEditor;
+      if (editor) {
+          this.currentFilePath = editor.document.fileName;
+          this.refresh();
+      }
+    }
     vscode.window.onDidChangeActiveTextEditor((editor) => {
       if (editor?.document.languageId === "typescript") {
         this.currentFilePath = editor.document.fileName;
@@ -30,12 +49,24 @@ export class StructureTreeProvider
       }
     });
 
-    vscode.commands.executeCommand("setContext", "structureView.hasPinnedItems", this.pinnedEntities.size > 0);
+    vscode.commands.executeCommand(
+      "setContext",
+      "structureView.hasPinnedItems",
+      this.pinnedEntities.size > 0
+    );
   }
 
   refresh(): void {
     this._onDidChangeTreeData.fire();
   }
+
+    /** 🔄 Refresh Structure View - Reset toàn bộ trạng thái */
+    refreshStructure(): void {
+      this.pinnedEntities.clear();
+      this.selectedComparisons = [];
+      this.selectedStructures = [];
+      this.refresh();
+    }
 
   /** 📌 Ghim Entity/DTO */
   pinEntity(entity: StructureItem) {
@@ -49,7 +80,11 @@ export class StructureTreeProvider
       );
       pinnedEntity.children = entity.children;
       this.pinnedEntities.set(label, pinnedEntity);
-      vscode.commands.executeCommand("setContext", "structureView.hasPinnedItems", true);
+      vscode.commands.executeCommand(
+        "setContext",
+        "structureView.hasPinnedItems",
+        true
+      );
 
       this.refresh();
     }
@@ -61,7 +96,11 @@ export class StructureTreeProvider
     const label = entity.label.toString().replace(/^📌\s*/, "");
     if (this.pinnedEntities.has(label)) {
       this.pinnedEntities.delete(label);
-      vscode.commands.executeCommand("setContext", "structureView.hasPinnedItems", this.pinnedEntities.size > 0);
+      vscode.commands.executeCommand(
+        "setContext",
+        "structureView.hasPinnedItems",
+        this.pinnedEntities.size > 0
+      );
 
       // if (this.pinnedEntities.size === 0) {
       //   vscode.commands.executeCommand(
@@ -90,12 +129,44 @@ export class StructureTreeProvider
     }
   }
 
-  /** 🔄 Refresh Structure View - Reset toàn bộ trạng thái */
-  refreshStructure(): void {
-    this.pinnedEntities.clear();
-    this.selectedComparisons = [];
-    this.selectedStructures = [];
-    this.refresh();
+
+
+  /** ✅ Lọc DTO/Entity theo tên */
+  filterEntitiesByName() {
+    vscode.window
+      .showInputBox({
+        prompt: "🔍 Enter name to filter DTO/Entity",
+        placeHolder: "Example: UserDto, OrderEntity...",
+      })
+      .then((input) => {
+        if (input === undefined) {
+          return;
+        }
+
+        this.filterText = input.trim();
+        console.log('-----------------------------------------------')
+        console.log("filter text", this.filterText);
+        console.log('all entity', this.allEntities);
+        console.log('-----------------------------------------------')
+        if (this.filterText === "") {
+          this.filteredEntities = [];
+        } else {
+          this.filteredEntities = this.allEntities.filter((entity) => {
+            const labelText =
+              typeof entity.label === "string"
+                ? entity.label
+                : entity.label?.label;
+            return labelText
+              ?.toLowerCase()
+              .includes(this.filterText!.toLowerCase());
+          });
+        }
+        console.log('-----------------------------------------------');
+        console.log("filtered entity", this.filteredEntities);
+        console.log('-----------------------------------------------');
+
+        this.refresh();
+      });
   }
 
   /** 📌 Chỉ load DTO/Entity/Enum từ vùng được chọn */
@@ -165,9 +236,14 @@ export class StructureTreeProvider
           "info"
         ),
       ]);
+      
     }
 
     if (!element) {
+      // return Promise.resolve(
+      //   this.filterText ? this.filteredEntities : this.allEntities
+      // );
+
       let rootItems = [
         ...this.pinnedEntities.values(),
         ...this.parseStructure(this.currentFilePath),
@@ -181,6 +257,10 @@ export class StructureTreeProvider
         );
         comparisonRoot.children = this.selectedComparisons;
         rootItems.push(comparisonRoot);
+
+        return Promise.resolve(
+          this.filterText ? this.filteredEntities : this.allEntities
+        );
       }
 
       return Promise.resolve(rootItems);
@@ -189,59 +269,76 @@ export class StructureTreeProvider
     return Promise.resolve(element.children);
   }
 
-  // private parseStructure(filePath: string): StructureItem[] {
-  //   const sourceFile: SourceFile = this.project.addSourceFileAtPath(filePath);
-  //   const structure: StructureItem[] = [];
+  /** ✅ Khi click vào class -> tự động tìm trong file đang mở */
+  async searchInCurrentFile(className: string) {
+    const editor = vscode.window.activeTextEditor;
+    if (!editor) {
+      vscode.window.showWarningMessage("⚠️ No active editor found.");
+      return;
+    }
 
-  //   sourceFile.getImportDeclarations().forEach((importDecl) => {
-  //     importDecl.getNamedImports().forEach((namedImport) => {
-  //       const importName = namedImport.getName();
-  //       const importFile = importDecl
-  //         .getModuleSpecifierSourceFile()
-  //         ?.getFilePath();
+    const document = editor.document;
+    const text = document.getText();
+    // ✅ Tạo regex tìm class với nhiều biến thể
+    const classRegex = new RegExp(`${className}`, "g");
+    const searchResults: vscode.Position[] = [];
 
-  //       if (importFile) {
-  //         const entityDetails = this.getEntityOrEnumDetails(
-  //           importFile,
-  //           importName
-  //         );
-  //         if (entityDetails.length > 0) {
-  //           const entityItem = new StructureItem(
-  //             `📦 ${importName}`,
-  //             vscode.TreeItemCollapsibleState.Collapsed,
-  //             "class"
-  //           );
-  //           entityItem.children = entityDetails;
-  //           entityItem.contextValue = "entity";
-  //           structure.push(entityItem);
-  //         }
-  //       }
-  //     });
-  //   });
+    let match;
+    while ((match = classRegex.exec(text)) !== null) {
+      const position = document.positionAt(match.index);
+      searchResults.push(position);
+    }
 
-  //   return structure;
-  // }
+    if (searchResults.length === 0) {
+      vscode.window.showInformationMessage(
+        `🔍 Class "${className}" not found in current file.`
+      );
+      return;
+    }
 
-   /** ✅ Cập nhật `parseStructure` để gom nhóm theo hậu tố */
-   private parseStructure(filePath: string): StructureItem[] {
+    // ✅ Lưu danh sách vị trí của class này nếu chưa có
+    this.searchResults = searchResults;
+    if (!this.searchIndexMap.has(className)) {
+      this.searchIndexMap.set(className, 0);
+    }
+
+    // ✅ Lấy vị trí tiếp theo trong danh sách
+    let currentIndex = this.searchIndexMap.get(className)!;
+    const nextIndex = (currentIndex + 1) % searchResults.length; // Vòng lại vị trí đầu nếu hết
+    this.searchIndexMap.set(className, nextIndex);
+
+    const position = searchResults[currentIndex];
+    const selection = new vscode.Selection(position, position);
+
+    editor.selection = selection;
+    editor.revealRange(selection, vscode.TextEditorRevealType.InCenter);
+  }
+
+  /** ✅ Cập nhật `parseStructure` để gom nhóm theo hậu tố */
+  private parseStructure(filePath: string): StructureItem[] {
     const sourceFile: SourceFile = this.project.addSourceFileAtPath(filePath);
     const structure: StructureItem[] = [];
 
     const groupedItems: { [key: string]: StructureItem[] } = {
-      "Entity": [],
-      "Dto": [],
-      "Type": [],
-      "Enum": [],
-      "Other": []
+      Entity: [],
+      Dto: [],
+      Type: [],
+      Enum: [],
+      Other: [],
     };
 
-    sourceFile.getImportDeclarations().forEach(importDecl => {
-      importDecl.getNamedImports().forEach(namedImport => {
+    sourceFile.getImportDeclarations().forEach((importDecl) => {
+      importDecl.getNamedImports().forEach((namedImport) => {
         const importName = namedImport.getName();
-        const importFile = importDecl.getModuleSpecifierSourceFile()?.getFilePath();
+        const importFile = importDecl
+          .getModuleSpecifierSourceFile()
+          ?.getFilePath();
 
         if (importFile) {
-          const entityDetails = this.getEntityOrEnumDetails(importFile, importName);
+          const entityDetails = this.getEntityOrEnumDetails(
+            importFile,
+            importName
+          );
           if (entityDetails.length > 0) {
             const entityItem = new StructureItem(
               `📦 ${importName}`,
@@ -250,6 +347,13 @@ export class StructureTreeProvider
             );
             entityItem.children = entityDetails;
             entityItem.contextValue = "entity";
+
+            // ✅ Thêm sự kiện click để tìm trong file đang mở
+            entityItem.command = {
+              command: "structureView.searchInCurrentFile",
+              title: "Search Class",
+              arguments: [importName],
+            };
 
             // ✅ Gom nhóm dựa theo hậu tố
             if (importName.endsWith("Entity")) {
@@ -269,7 +373,7 @@ export class StructureTreeProvider
     });
 
     // ✅ Sắp xếp danh sách theo nhóm
-    Object.keys(groupedItems).forEach(group => {
+    Object.keys(groupedItems).forEach((group) => {
       if (groupedItems[group].length > 0) {
         const groupItem = new StructureItem(
           `📂 ${group}`,
@@ -281,29 +385,41 @@ export class StructureTreeProvider
       }
     });
 
+    this.allEntities = structure; // ✅ Lưu toàn bộ danh sách DTO/Entity để lọc
     return structure;
   }
 
- /** ✅ Hàm lấy thông tin của Entity/Enum */
- private getEntityOrEnumDetails(filePath: string, name: string): StructureItem[] {
-  const sourceFile = this.project.addSourceFileAtPath(filePath);
-  const entityClass = sourceFile.getClass(name);
-  const enumDecl = sourceFile.getEnum(name);
+  /** ✅ Hàm lấy thông tin của Entity/Enum */
+  private getEntityOrEnumDetails(
+    filePath: string,
+    name: string
+  ): StructureItem[] {
+    const sourceFile = this.project.addSourceFileAtPath(filePath);
+    const entityClass = sourceFile.getClass(name);
+    const enumDecl = sourceFile.getEnum(name);
 
-  if (entityClass) {
-    return entityClass.getProperties().map(prop => {
-      return new StructureItem(`🔹 ${prop.getName()}: ${prop.getType().getText()}`, vscode.TreeItemCollapsibleState.None, "property");
-    });
+    if (entityClass) {
+      return entityClass.getProperties().map((prop) => {
+        return new StructureItem(
+          `🔹 ${prop.getName()}: ${prop.getType().getText()}`,
+          vscode.TreeItemCollapsibleState.None,
+          "property"
+        );
+      });
+    }
+
+    if (enumDecl) {
+      return enumDecl.getMembers().map((member) => {
+        return new StructureItem(
+          `🔸 ${member.getName()} = ${member.getValue()}`,
+          vscode.TreeItemCollapsibleState.None,
+          "enum-member"
+        );
+      });
+    }
+
+    return [];
   }
-
-  if (enumDecl) {
-    return enumDecl.getMembers().map(member => {
-      return new StructureItem(`🔸 ${member.getName()} = ${member.getValue()}`, vscode.TreeItemCollapsibleState.None, "enum-member");
-    });
-  }
-
-  return [];
-}
 }
 
 export class StructureItem extends vscode.TreeItem {
@@ -318,3 +434,9 @@ export class StructureItem extends vscode.TreeItem {
     super(label, collapsibleState);
   }
 }
+// TODO: check filter not work
+// - command command filter
+// - ô filter
+// - chọn word từ editor
+// TODO: check compare not work
+// TODO: unpin not work

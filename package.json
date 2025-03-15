@@ -3,6 +3,10 @@
   "displayName": "Structure",
   "description": "",
   "version": "0.0.1",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wyattbui/vscode.structure.git"
+  },
   "engines": {
     "vscode": "^1.98.0"
   },
@@ -51,6 +55,10 @@
     {
       "command": "structureView.refresh",
       "title": "🔄 Refresh Structure View"
+    },
+    {
+      "command": "structureView.searchInCurrentFile",
+      "title": "🔍 Search Class in Current File"
     }
   ],
   "menus": {

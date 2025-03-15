@@ -1,8 +1,9 @@
 import * as vscode from "vscode";
-import { StructureTreeProvider, StructureItem } from "./structureView";
+import { StructureTreeProvider, StructureItem,TEST } from "./structureView";
+console.log(TEST.Enum1)
 
 export function activate(context: vscode.ExtensionContext) {
-  const structureProvider = new StructureTreeProvider();
+  let structureProvider = new StructureTreeProvider();
   vscode.window.registerTreeDataProvider("structureTree", structureProvider);
 
   let selectedEntities: StructureItem[] = [];
@@ -31,12 +32,19 @@ export function activate(context: vscode.ExtensionContext) {
         return;
       }
       structureProvider.parseStructureFromSelection(editor.selection);
+      vscode.window.showInformationMessage("🔄 Structure View created successfully!");
     }),
 
     vscode.commands.registerCommand("structureView.refresh", () => {
-      structureProvider.refreshStructure();
+      // structureProvider.refreshStructure();
+      structureProvider = new StructureTreeProvider();
+      vscode.window.registerTreeDataProvider("structureTree", structureProvider);
       vscode.window.showInformationMessage("🔄 Structure View refreshed successfully!");
-    })
+    }),
+    
+    vscode.commands.registerCommand("structureView.searchInCurrentFile", (className: string) => {
+      structureProvider.searchInCurrentFile(className);
+    }),
   );
 }
 
