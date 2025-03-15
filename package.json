@@ -42,15 +42,19 @@
    "commands": [
     {
       "command": "structureView.filterEntity",
-      "title": "🔍 Filter Entity/DTO"
+      "title": "🔍 Filter"
+    },
+    {
+      "command": "structureView.clearFilter",
+      "title": " ❌Clear Filter"
     },
     {
       "command": "structureView.pinEntity",
-      "title": "📌 Pin Entity/DTO"
+      "title": "📌 Pin structure entity"
     },
     {
       "command": "structureView.unpinEntity",
-      "title": "❌ Unpin Entity/DTO"
+      "title": "❌ Unpin structure entity"
     },
     {
       "command": "structureView.selectForComparison",
@@ -58,7 +62,7 @@
     },
     {
       "command": "structureView.refresh",
-      "title": "🔄 Refresh Structure View"
+      "title": "🔄 Refresh Structure"
     },
     {
       "command": "structureView.searchInCurrentFile",
@@ -66,6 +70,16 @@
     }
   ],
   "menus": {
+    "commandPalette": [
+      {
+        "command": "structureView.filterEntity",
+        "title": "Filter Entities by Name"
+      },
+      {
+        "command": "structureView.clearFilter",
+        "title": "Clear Filter"
+      }
+    ],
     "view/item/context": [
       {
         "command": "structureView.pinEntity",
@@ -86,6 +100,18 @@
     "view/title": [
       {
         "command": "structureView.refresh",
+        "when": "view == structureTree",
+        "group": "navigation"
+      },
+      {
+        "command": "structureView.filterEntity",
+        "title": "🔍 Filter",
+        "when": "view == structureTree",
+        "group": "navigation"
+      },
+      {
+        "command": "structureView.clearFilter",
+        "title": "❌ Clear Filter",
         "when": "view == structureTree",
         "group": "navigation"
       }

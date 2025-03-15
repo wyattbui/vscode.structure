@@ -9,7 +9,7 @@ import {
 
 export enum TEST {
   Enum1 = 1,
-  Enum2 = 2
+  Enum2 = 2,
 }
 
 export class StructureTreeProvider
@@ -35,11 +35,11 @@ export class StructureTreeProvider
 
   constructor() {
     console.log(this.currentFilePath);
-    if(!this.currentFilePath) {
+    if (!this.currentFilePath) {
       const editor = vscode.window.activeTextEditor;
       if (editor) {
-          this.currentFilePath = editor.document.fileName;
-          this.refresh();
+        this.currentFilePath = editor.document.fileName;
+        this.refresh();
       }
     }
     vscode.window.onDidChangeActiveTextEditor((editor) => {
@@ -60,13 +60,13 @@ export class StructureTreeProvider
     this._onDidChangeTreeData.fire();
   }
 
-    /** 🔄 Refresh Structure View - Reset toàn bộ trạng thái */
-    refreshStructure(): void {
-      this.pinnedEntities.clear();
-      this.selectedComparisons = [];
-      this.selectedStructures = [];
-      this.refresh();
-    }
+  /** 🔄 Refresh Structure View - Reset toàn bộ trạng thái */
+  refreshStructure(): void {
+    this.pinnedEntities.clear();
+    this.selectedComparisons = [];
+    this.selectedStructures = [];
+    this.refresh();
+  }
 
   /** 📌 Ghim Entity/DTO */
   pinEntity(entity: StructureItem) {
@@ -129,60 +129,87 @@ export class StructureTreeProvider
     }
   }
 
-
-
+  clearFilter() {
+    console.log("🚀 Clearing filter...");
+    this.filterText = null;
+    this.filteredEntities = this.allEntities; // Reset danh sách về trạng thái ban đầu
+    this.refresh();
+  }
+  
   /** ✅ Lọc DTO/Entity theo tên */
   filterEntitiesByName() {
+    const editor = vscode.window.activeTextEditor;
+    let selectedText: string | undefined;
+
+    // Nếu có editor đang mở
+    if (editor) {
+      const selection = editor.selection;
+      selectedText = editor.document.getText(selection).trim(); // Lấy nội dung vùng chọn
+    }
+
+    // Nếu có văn bản được chọn, sử dụng luôn để lọc
+    if (selectedText) {
+      console.log("🔍 Filtering by selected text:", selectedText);
+      this.applyFilter(selectedText);
+      return;
+    }
+
+    // Nếu không có vùng chọn, mở hộp thoại nhập
     vscode.window
       .showInputBox({
         prompt: "🔍 Enter name to filter DTO/Entity",
         placeHolder: "Example: UserDto, OrderEntity...",
       })
       .then((input) => {
-        if (input === undefined) {
-          console.log('RECEIVED undefined?');
+        if (!input) {
+          console.log("❌ No input provided");
           return;
         }
-
-        this.filterText = input.trim().toLowerCase();
-        console.log("🔍 Filter text:", this.filterText);
-        console.log("📦 All entities before filtering:", this.allEntities);
-
-        if (this.filterText === "") {
-          this.filteredEntities = this.allEntities;
-        } else {
-          this.filteredEntities = this.allEntities
-            .map((groupItem) => {
-              const filteredChildren = groupItem.children.filter((entity) => {
-                const labelText = typeof entity.label === "string"
-                  ? entity.label.toLowerCase()
-                  : entity.label?.label?.toLowerCase() ?? ""; 
-                return labelText.includes(this.filterText!);
-              });
-
-              if (filteredChildren.length > 0) {
-                const groupLabel = typeof groupItem.label === "string" 
-                  ? groupItem.label 
-                  : groupItem.label?.label ?? "Unknown";
-
-                const newGroup = new StructureItem(
-                  groupLabel,
-                  vscode.TreeItemCollapsibleState.Collapsed,
-                  "folder"
-                );
-                newGroup.children = filteredChildren;
-                return newGroup;
-              }
-
-              return null;
-            })
-            .filter(Boolean) as StructureItem[];
-        }
-
-        console.log("✅ Filtered Entities:", this.filteredEntities);
-        this.refresh();
+        this.applyFilter(input.trim());
       });
-}
+  }
+
+  /** ✅ Hàm riêng để áp dụng bộ lọc */
+  private applyFilter(filterText: string) {
+    this.filterText = filterText.toLowerCase();
+    console.log("📌 Applying filter:", this.filterText);
+
+    if (this.filterText === "") {
+      this.filteredEntities = this.allEntities;
+    } else {
+      this.filteredEntities = this.allEntities
+        .map((groupItem) => {
+          const filteredChildren = groupItem.children.filter((entity) => {
+            const labelText =
+              typeof entity.label === "string"
+                ? entity.label.toLowerCase()
+                : entity.label?.label?.toLowerCase() ?? "";
+            return labelText.includes(this.filterText ?? "");
+          });
+
+          if (filteredChildren.length > 0) {
+            const groupLabel =
+              typeof groupItem.label === "string"
+                ? groupItem.label
+                : groupItem.label?.label ?? "Unknown";
+
+            const newGroup = new StructureItem(
+              groupLabel,
+              vscode.TreeItemCollapsibleState.Collapsed,
+              "folder"
+            );
+            newGroup.children = filteredChildren;
+            return newGroup;
+          }
+
+          return null;
+        })
+        .filter(Boolean) as StructureItem[];
+    }
+
+    console.log("✅ Filtered Entities:", this.filteredEntities);
+    this.refresh();
+  }
 
   /** 📌 Chỉ load DTO/Entity/Enum từ vùng được chọn */
   parseStructureFromSelection(selection: vscode.Selection) {
@@ -251,7 +278,6 @@ export class StructureTreeProvider
           "info"
         ),
       ]);
-      
     }
 
     if (!element) {
@@ -331,7 +357,7 @@ export class StructureTreeProvider
 
   /** ✅ Cập nhật `parseStructure` để gom nhóm theo hậu tố */
   private parseStructure(filePath: string): StructureItem[] {
-    if(this.filteredEntities && this.filteredEntities.length > 0){
+    if (this.filteredEntities && this.filteredEntities.length > 0) {
       return this.filteredEntities;
     }
 
@@ -391,9 +417,9 @@ export class StructureTreeProvider
       });
     });
 
-    console.log('-----------------------------------------------')
+    console.log("-----------------------------------------------");
     console.log("groupedItem", groupedItems);
-    console.log('-----------------------------------------------')
+    console.log("-----------------------------------------------");
 
     // ✅ Sắp xếp danh sách theo nhóm
     Object.keys(groupedItems).forEach((group) => {
@@ -408,9 +434,9 @@ export class StructureTreeProvider
       }
     });
 
-    console.log('-----------------------------------------------')
+    console.log("-----------------------------------------------");
     console.log("parse structure: structure", structure);
-    console.log('-----------------------------------------------')
+    console.log("-----------------------------------------------");
 
     this.allEntities = structure; // ✅ Lưu toàn bộ danh sách DTO/Entity để lọc
     return structure;

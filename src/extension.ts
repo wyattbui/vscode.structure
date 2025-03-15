@@ -14,6 +14,10 @@ export function activate(context: vscode.ExtensionContext) {
       structureProvider.filterEntitiesByName();
     }),
 
+    vscode.commands.registerCommand("structureView.clearFilter", () => {
+      structureProvider.clearFilter();
+    }),
+
     vscode.commands.registerCommand("structureView.pinEntity", (entity: StructureItem) => {
       if (!entity) return;
       structureProvider.pinEntity(entity);
