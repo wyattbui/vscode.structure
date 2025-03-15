@@ -80,6 +80,7 @@ export class StructureTreeProvider
       );
       pinnedEntity.children = entity.children;
       this.pinnedEntities.set(label, pinnedEntity);
+      pinnedEntity.contextValue = "pinned"; // ✅ Đặt contextValue để hiển thị nút "Unpin"
       vscode.commands.executeCommand(
         "setContext",
         "structureView.hasPinnedItems",
@@ -102,13 +103,6 @@ export class StructureTreeProvider
         this.pinnedEntities.size > 0
       );
 
-      // if (this.pinnedEntities.size === 0) {
-      //   vscode.commands.executeCommand(
-      //     "setContext",
-      //     "structureView.hasPinnedItems",
-      //     false
-      //   );
-      // }
       this.refresh();
     }
   }
@@ -266,6 +260,7 @@ export class StructureTreeProvider
   }
 
   getTreeItem(element: StructureItem): vscode.TreeItem {
+    console.log(`🔍 Item: ${element.label}, Context: ${element.contextValue}`);
     return element;
   }
 
@@ -487,9 +482,5 @@ export class StructureItem extends vscode.TreeItem {
     super(label, collapsibleState);
   }
 }
-// TODO: check filter not work
-// - command command filter
-// - ô filter
-// - chọn word từ editor
 // TODO: check compare not work
 // TODO: unpin not work

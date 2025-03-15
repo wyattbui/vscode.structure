@@ -41,28 +41,28 @@
     },
    "commands": [
     {
+      "command": "structureView.refresh",
+      "title": "🔄 Refresh Structure"
+    },
+    {
       "command": "structureView.filterEntity",
       "title": "🔍 Filter"
     },
     {
       "command": "structureView.clearFilter",
-      "title": " ❌Clear Filter"
+      "title": "🧹 Clear Filter"
     },
     {
       "command": "structureView.pinEntity",
-      "title": "📌 Pin structure entity"
+      "title": "📌 Pin structure"
     },
     {
       "command": "structureView.unpinEntity",
-      "title": "❌ Unpin structure entity"
+      "title": "❌ Unpin structure"
     },
     {
       "command": "structureView.selectForComparison",
-      "title": "🔍 Select for Comparison"
-    },
-    {
-      "command": "structureView.refresh",
-      "title": "🔄 Refresh Structure"
+      "title": "🔀 Select for Comparison"
     },
     {
       "command": "structureView.searchInCurrentFile",
@@ -83,12 +83,12 @@
     "view/item/context": [
       {
         "command": "structureView.pinEntity",
-        "when": "view == structureTree && resourceContext != pinned",
+        "when": "view == structureTree && viewItem != pinned",
         "group": "navigation"
       },
       {
         "command": "structureView.unpinEntity",
-        "when": "view == structureTree && resourceContext == pinned",
+        "when": "view == structureTree && viewItem  == pinned",
         "group": "navigation"
       },
       {
@@ -105,13 +105,11 @@
       },
       {
         "command": "structureView.filterEntity",
-        "title": "🔍 Filter",
         "when": "view == structureTree",
         "group": "navigation"
       },
       {
         "command": "structureView.clearFilter",
-        "title": "❌ Clear Filter",
         "when": "view == structureTree",
         "group": "navigation"
       }
