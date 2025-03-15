@@ -140,34 +140,49 @@ export class StructureTreeProvider
       })
       .then((input) => {
         if (input === undefined) {
+          console.log('RECEIVED undefined?');
           return;
         }
 
-        this.filterText = input.trim();
-        console.log('-----------------------------------------------')
-        console.log("filter text", this.filterText);
-        console.log('all entity', this.allEntities);
-        console.log('-----------------------------------------------')
-        if (this.filterText === "") {
-          this.filteredEntities = [];
-        } else {
-          this.filteredEntities = this.allEntities.filter((entity) => {
-            const labelText =
-              typeof entity.label === "string"
-                ? entity.label
-                : entity.label?.label;
-            return labelText
-              ?.toLowerCase()
-              .includes(this.filterText!.toLowerCase());
-          });
-        }
-        console.log('-----------------------------------------------');
-        console.log("filtered entity", this.filteredEntities);
-        console.log('-----------------------------------------------');
+        this.filterText = input.trim().toLowerCase();
+        console.log("🔍 Filter text:", this.filterText);
+        console.log("📦 All entities before filtering:", this.allEntities);
 
+        if (this.filterText === "") {
+          this.filteredEntities = this.allEntities;
+        } else {
+          this.filteredEntities = this.allEntities
+            .map((groupItem) => {
+              const filteredChildren = groupItem.children.filter((entity) => {
+                const labelText = typeof entity.label === "string"
+                  ? entity.label.toLowerCase()
+                  : entity.label?.label?.toLowerCase() ?? ""; 
+                return labelText.includes(this.filterText!);
+              });
+
+              if (filteredChildren.length > 0) {
+                const groupLabel = typeof groupItem.label === "string" 
+                  ? groupItem.label 
+                  : groupItem.label?.label ?? "Unknown";
+
+                const newGroup = new StructureItem(
+                  groupLabel,
+                  vscode.TreeItemCollapsibleState.Collapsed,
+                  "folder"
+                );
+                newGroup.children = filteredChildren;
+                return newGroup;
+              }
+
+              return null;
+            })
+            .filter(Boolean) as StructureItem[];
+        }
+
+        console.log("✅ Filtered Entities:", this.filteredEntities);
         this.refresh();
       });
-  }
+}
 
   /** 📌 Chỉ load DTO/Entity/Enum từ vùng được chọn */
   parseStructureFromSelection(selection: vscode.Selection) {
@@ -316,6 +331,10 @@ export class StructureTreeProvider
 
   /** ✅ Cập nhật `parseStructure` để gom nhóm theo hậu tố */
   private parseStructure(filePath: string): StructureItem[] {
+    if(this.filteredEntities && this.filteredEntities.length > 0){
+      return this.filteredEntities;
+    }
+
     const sourceFile: SourceFile = this.project.addSourceFileAtPath(filePath);
     const structure: StructureItem[] = [];
 
@@ -372,6 +391,10 @@ export class StructureTreeProvider
       });
     });
 
+    console.log('-----------------------------------------------')
+    console.log("groupedItem", groupedItems);
+    console.log('-----------------------------------------------')
+
     // ✅ Sắp xếp danh sách theo nhóm
     Object.keys(groupedItems).forEach((group) => {
       if (groupedItems[group].length > 0) {
@@ -384,6 +407,10 @@ export class StructureTreeProvider
         structure.push(groupItem);
       }
     });
+
+    console.log('-----------------------------------------------')
+    console.log("parse structure: structure", structure);
+    console.log('-----------------------------------------------')
 
     this.allEntities = structure; // ✅ Lưu toàn bộ danh sách DTO/Entity để lọc
     return structure;

@@ -41,6 +41,10 @@
     },
    "commands": [
     {
+      "command": "structureView.filterEntity",
+      "title": "🔍 Filter Entity/DTO"
+    },
+    {
       "command": "structureView.pinEntity",
       "title": "📌 Pin Entity/DTO"
     },
@@ -84,6 +88,12 @@
         "command": "structureView.refresh",
         "when": "view == structureTree",
         "group": "navigation"
+      }
+    ],
+    "editor/context": [
+      {
+        "command": "structureView.filterEntity",
+        "title": "Filter Entities by Name"
       }
     ]
   }

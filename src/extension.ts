@@ -9,11 +9,17 @@ export function activate(context: vscode.ExtensionContext) {
   let selectedEntities: StructureItem[] = [];
 
   context.subscriptions.push(
+    vscode.commands.registerCommand("structureView.filterEntity", (entity: StructureItem) => {
+      if (!entity) return;
+      structureProvider.filterEntitiesByName();
+    }),
+
     vscode.commands.registerCommand("structureView.pinEntity", (entity: StructureItem) => {
       if (!entity) return;
       structureProvider.pinEntity(entity);
       vscode.window.showInformationMessage(`📌 Pinned ${entity.label}`);
     }),
+
     vscode.commands.registerCommand("structureView.unpinEntity", (entity: StructureItem) => {
       if (!entity) return;
       structureProvider.unpinEntity(entity);
