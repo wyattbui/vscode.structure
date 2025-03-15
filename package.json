@@ -69,6 +69,13 @@
         "title": "🔍 Search Class in Current File"
       }
     ],
+    "keybindings": [
+      {
+        "command": "structureView.filter",
+        "key": "ctrl+shift+q",
+        "when": "view == structureTree"
+      }
+    ],
     "menus": {
       "commandPalette": [
         {
@@ -133,6 +140,7 @@
   },
   "devDependencies": {
     "@types/chalk": "^2.2.4",
+    "@types/colors": "^1.2.4",
     "@types/mocha": "^10.0.10",
     "@types/node": "^20.17.24",
     "@types/vscode": "^1.98.0",
@@ -144,6 +152,7 @@
     "typescript": "^5.8.2"
   },
   "dependencies": {
+    "colors": "^1.4.0",
     "ts-morph": "^25.0.1"
   }
 }
