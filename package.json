@@ -58,9 +58,14 @@
         "icon": "$(filter)"
       },
       {
+        "command": "structureView.filterEntityByText",
+        "title": "Filter structure",
+        "icon": "$(filter)"
+      },
+      {
         "command": "structureView.clearFilter",
         "title": "🧹 Clear Filter Structure",
-        "icon": "$(clear-all)"
+        "icon": "$(discard)"
       },
       {
         "command": "structureView.pinEntity",
@@ -75,15 +80,20 @@
         "title": "👉 Select for Comparison"
       },
       {
+        "command": "structureView.clearComparison",
+        "title": "🧹 Clear Comparison",
+        "icon": "$(surround-with)"
+      },
+      {
         "command": "structureView.searchInCurrentFile",
         "title": "🔍 Search Class in Current File"
       }
     ],
     "keybindings": [
       {
-        "command": "structureView.filter",
-        "key": "ctrl+shift+q",
-        "when": "viewId == structureTree || viewId == structureView"
+        "command": "structureView.filterEntityByText",
+        "key": "alt+a",
+        "when": "editorHasSelection && editorTextFocus"
       }
     ],
     "menus": {
@@ -100,18 +110,18 @@
       "view/item/context": [
         {
           "command": "structureView.pinEntity",
-          "when": "view == structureTree && viewItem != pinned",
+          "when": "view == structureTree ||  view == structureView && viewItem != pinned",
           "group": "navigation"
         },
         {
           "command": "structureView.unpinEntity",
-          "when": "view == structureTree && viewItem  == pinned",
+          "when": "view == structureTree || view == structureView && viewItem  == pinned",
           "group": "navigation"
         },
         {
           "command": "structureView.selectForComparison",
           "title": "Compare with Another Entity",
-          "when": "view == structureTree && resourceContext != compare",
+          "when": "view == structureTree || view == structureView && resourceContext != compare",
           "group": "navigation"
         }
       ],
@@ -128,6 +138,11 @@
         },
         {
           "command": "structureView.clearFilter",
+          "when": "view == structureTree || view == structureView",
+          "group": "navigation"
+        },
+        {
+          "command": "structureView.clearComparison",
           "when": "view == structureTree || view == structureView",
           "group": "navigation"
         }

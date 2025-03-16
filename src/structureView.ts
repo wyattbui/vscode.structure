@@ -232,7 +232,8 @@ export class StructureTreeProvider
   }
 
   clearComparison() {
-    this.selectedComparisons = []; // ✅ Xóa toàn bộ danh sách so sánh
+    this.selectedComparisons = []; // clear
+    this.hasCompare = false;
     this.refresh();
   }
 

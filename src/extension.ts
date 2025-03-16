@@ -8,6 +8,21 @@ export function activate(context: vscode.ExtensionContext) {
 
 
   context.subscriptions.push(
+    vscode.commands.registerCommand("structureView.filterEntityByText", () => {
+      const editor = vscode.window.activeTextEditor;
+      if (!editor) {
+        return;
+      }
+  
+      const selection = editor.selection;
+      const selectedText = editor.document.getText(selection).trim();
+  
+      if (!selectedText) {
+        return;
+      }
+      structureProvider.filterEntitiesByName();
+    }),
+
     vscode.commands.registerCommand("structureView.filterEntity", (entity: StructureItem) => {
       if (!entity) return;
       structureProvider.filterEntitiesByName();
@@ -15,6 +30,9 @@ export function activate(context: vscode.ExtensionContext) {
 
     vscode.commands.registerCommand("structureView.clearFilter", () => {
       structureProvider.clearFilter();
+    }),
+    vscode.commands.registerCommand("structureView.clearComparison", () => {
+      structureProvider.clearComparison();
     }),
 
     vscode.commands.registerCommand("structureView.pinEntity", (entity: StructureItem) => {
