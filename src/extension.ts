@@ -4,6 +4,8 @@ import { StructureTreeProvider, StructureItem } from "./structureView";
 export function activate(context: vscode.ExtensionContext) {
   let structureProvider = new StructureTreeProvider();
   vscode.window.registerTreeDataProvider("structureTree", structureProvider);
+  vscode.window.registerTreeDataProvider("structureView", structureProvider); // Thêm cho Explorer
+
 
   context.subscriptions.push(
     vscode.commands.registerCommand("structureView.filterEntity", (entity: StructureItem) => {
@@ -43,6 +45,7 @@ export function activate(context: vscode.ExtensionContext) {
     vscode.commands.registerCommand("structureView.refresh", () => {
       structureProvider = new StructureTreeProvider();
       vscode.window.registerTreeDataProvider("structureTree", structureProvider);
+      vscode.window.registerTreeDataProvider("structureView", structureProvider); // Thêm cho Explorer
     }),
     
     vscode.commands.registerCommand("structureView.searchInCurrentFile", (className: string) => {

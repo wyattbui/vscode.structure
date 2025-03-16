@@ -31,6 +31,13 @@
       ]
     },
     "views": {
+      "explorer": [
+        {
+          "id": "structureView",
+          "name": "Structure",
+          "icon": ""
+        }
+      ],
       "structureView": [
         {
           "id": "structureTree",
@@ -73,7 +80,7 @@
       {
         "command": "structureView.filter",
         "key": "ctrl+shift+q",
-        "when": "view == structureTree"
+        "when": "viewId == structureTree || viewId == structureView"
       }
     ],
     "menus": {
@@ -108,17 +115,17 @@
       "view/title": [
         {
           "command": "structureView.refresh",
-          "when": "view == structureTree",
+          "when": "view == structureTree || view == structureView",
           "group": "navigation"
         },
         {
           "command": "structureView.filterEntity",
-          "when": "view == structureTree",
+          "when": "view == structureTree || view == structureView ",
           "group": "navigation"
         },
         {
           "command": "structureView.clearFilter",
-          "when": "view == structureTree",
+          "when": "view == structureTree || view == structureView",
           "group": "navigation"
         }
       ],
