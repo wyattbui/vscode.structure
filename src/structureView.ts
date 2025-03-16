@@ -68,7 +68,7 @@ export class StructureTreeProvider
 
   /** 📌 Ghim Entity/DTO */
   pinEntity(entity: StructureItem) {
-    if (!entity.label) return;
+    if (!entity.label) {return;}
     const label = entity.label.toString();
     if (!this.pinnedEntities.has(label)) {
       const pinnedEntity = new StructureItem(
@@ -91,7 +91,7 @@ export class StructureTreeProvider
 
   /** ❌ Bỏ ghim Entity/DTO */
   unpinEntity(entity: StructureItem) {
-    if (!entity.label) return;
+    if (!entity.label) {return;}
     const label = entity.label.toString().replace(/^📌\s*/, "");
     if (this.pinnedEntities.has(label)) {
       this.pinnedEntities.delete(label);
@@ -104,6 +104,20 @@ export class StructureTreeProvider
       this.refresh();
     }
   }
+
+  findEntityByName(entityName: string): StructureItem | undefined {
+    return this.allEntities
+      .flatMap(groupItem => groupItem.children) // ✅ Duyệt qua tất cả entity trong group
+      .find(entity => {
+        const labelText =
+          typeof entity.label === "string"
+            ? entity.label.toLowerCase()
+            : entity.label?.label?.toLowerCase() ?? "";
+        
+        return labelText.includes(entityName.toLowerCase());
+      });
+  }
+  
 
   /** 🔍 Thêm Entity vào danh sách so sánh */
   addEntityToComparison(entity: StructureItem) {
@@ -197,11 +211,13 @@ export class StructureTreeProvider
           )
       ),
 
-      uniqueA?.length > 0 ? new StructureItem(
-        `󠁯🟩 ${entityA.label} (${uniqueA.length})`,
-        vscode.TreeItemCollapsibleState.Collapsed,
-        "uniqueA"
-      ) : new StructureItem('', vscode.TreeItemCollapsibleState.None, ''),
+      uniqueA?.length > 0
+        ? new StructureItem(
+            `󠁯🟩 ${entityA.label} (${uniqueA.length})`,
+            vscode.TreeItemCollapsibleState.Collapsed,
+            "uniqueA"
+          )
+        : new StructureItem("", vscode.TreeItemCollapsibleState.None, ""),
       ...uniqueA.map(
         (prop) =>
           new StructureItem(
@@ -211,11 +227,13 @@ export class StructureTreeProvider
           )
       ),
 
-      uniqueB?.length > 0 ? new StructureItem(
-        `🟥 ${entityB.label} (${uniqueB.length})`,
-        vscode.TreeItemCollapsibleState.Collapsed,
-        "uniqueB"
-      ): new StructureItem('', vscode.TreeItemCollapsibleState.None, ''),
+      uniqueB?.length > 0
+        ? new StructureItem(
+            `🟥 ${entityB.label} (${uniqueB.length})`,
+            vscode.TreeItemCollapsibleState.Collapsed,
+            "uniqueB"
+          )
+        : new StructureItem("", vscode.TreeItemCollapsibleState.None, ""),
       ...uniqueB.map(
         (prop) =>
           new StructureItem(
@@ -524,7 +542,7 @@ export class StructureTreeProvider
   /** ✅ Hàm lấy thông tin của Entity/Enum */
   private getEntityOrEnumDetails(
     filePath: string,
-    name: string,
+    name: string
   ): StructureItem[] {
     const sourceFile = this.project.addSourceFileAtPath(filePath);
     const entityClass = sourceFile.getClass(name);
@@ -532,7 +550,7 @@ export class StructureTreeProvider
 
     if (entityClass) {
       let properties: StructureItem[] = [];
-  
+
       properties = entityClass.getProperties().map((prop) => {
         return new StructureItem(
           `🔹 ${prop.getName()} ${simplifyTypeName(prop.getType().getText())}`,
@@ -540,22 +558,25 @@ export class StructureTreeProvider
           "property"
         );
       });
-  
+
       const baseClass = entityClass.getBaseClass();
       if (baseClass) {
         const baseClassName = baseClass.getName();
         if (baseClassName) {
-          const inheritedProperties = this.getEntityOrEnumDetails(filePath, baseClassName);
-  
+          const inheritedProperties = this.getEntityOrEnumDetails(
+            filePath,
+            baseClassName
+          );
+
           if (!!inheritedProperties && inheritedProperties.length > 0) {
             properties = [...properties, ...inheritedProperties];
+          }
         }
+        return properties;
       }
+
       return properties;
     }
-
-    return properties;
-  }
 
     if (enumDecl) {
       return enumDecl.getMembers().map((member) => {

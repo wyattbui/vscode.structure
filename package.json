@@ -94,6 +94,11 @@
         "command": "structureView.filterEntityByText",
         "key": "alt+a",
         "when": "editorHasSelection && editorTextFocus"
+      },
+      {
+        "command": "structureView.selectEntityByText",
+        "key": "alt+q",
+        "when": "editorHasSelection && editorTextFocus"
       }
     ],
     "menus": {

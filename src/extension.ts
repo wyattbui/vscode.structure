@@ -23,8 +23,32 @@ export function activate(context: vscode.ExtensionContext) {
       structureProvider.filterEntitiesByName();
     }),
 
+    vscode.commands.registerCommand("structureView.selectEntityByText", () => {
+      const editor = vscode.window.activeTextEditor;
+      if (!editor) {
+        return;
+      }
+  
+      const selection = editor.selection;
+      const selectedText = editor.document.getText(selection).trim();
+  
+      if (!selectedText) {
+        return;
+      }
+  
+      // ✅ Tìm entity theo tên trong structureProvider
+      const entity = structureProvider.findEntityByName(selectedText);
+      if (!entity) {
+        vscode.window.showWarningMessage(`Entity '${selectedText}' not found.`);
+        return;
+      }
+  
+      // ✅ Thêm entity vào danh sách so sánh
+      structureProvider.addEntityToComparison(entity);
+    }),
+
     vscode.commands.registerCommand("structureView.filterEntity", (entity: StructureItem) => {
-      if (!entity) return;
+      if (!entity) {return;}
       structureProvider.filterEntitiesByName();
     }),
 
@@ -36,16 +60,16 @@ export function activate(context: vscode.ExtensionContext) {
     }),
 
     vscode.commands.registerCommand("structureView.pinEntity", (entity: StructureItem) => {
-      if (!entity) return;
+      if (!entity) {return;}
       structureProvider.pinEntity(entity);
     }),
 
     vscode.commands.registerCommand("structureView.unpinEntity", (entity: StructureItem) => {
-      if (!entity) return;
+      if (!entity) {return;}
       structureProvider.unpinEntity(entity);
     }),
     vscode.commands.registerCommand("structureView.selectForComparison", (entity: StructureItem) => {
-      if (!entity) return;
+      if (!entity) {return;}
       structureProvider.addEntityToComparison(entity);
     }),
     vscode.commands.registerCommand("structureView.addEntityToComparison", (entity: StructureItem) => {
