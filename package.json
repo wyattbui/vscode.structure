@@ -49,15 +49,18 @@
     "commands": [
       {
         "command": "structureView.refresh",
-        "title": "🔄 Refresh Structure"
+        "title": "Refresh structure",
+        "icon": "$(refresh)"
       },
       {
         "command": "structureView.filterEntity",
-        "title": "🔍 Filter"
+        "title": "Filter structure",
+        "icon": "$(filter)"
       },
       {
         "command": "structureView.clearFilter",
-        "title": "🧹 Clear Filter"
+        "title": "🧹 Clear Filter Structure",
+        "icon": "$(clear-all)"
       },
       {
         "command": "structureView.pinEntity",
