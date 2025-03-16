@@ -197,11 +197,11 @@ export class StructureTreeProvider
           )
       ),
 
-      new StructureItem(
+      uniqueA?.length > 0 ? new StructureItem(
         `󠁯🟩 ${entityA.label} (${uniqueA.length})`,
         vscode.TreeItemCollapsibleState.Collapsed,
         "uniqueA"
-      ),
+      ) : new StructureItem('', vscode.TreeItemCollapsibleState.None, ''),
       ...uniqueA.map(
         (prop) =>
           new StructureItem(
@@ -211,11 +211,11 @@ export class StructureTreeProvider
           )
       ),
 
-      new StructureItem(
+      uniqueB?.length > 0 ? new StructureItem(
         `🟥 ${entityB.label} (${uniqueB.length})`,
         vscode.TreeItemCollapsibleState.Collapsed,
         "uniqueB"
-      ),
+      ): new StructureItem('', vscode.TreeItemCollapsibleState.None, ''),
       ...uniqueB.map(
         (prop) =>
           new StructureItem(
@@ -516,28 +516,45 @@ export class StructureTreeProvider
       }
     });
 
-    this.allEntities = structure; // ✅ Lưu toàn bộ danh sách DTO/Entity để lọc
+    this.allEntities = structure;
     return structure;
   }
 
   /** ✅ Hàm lấy thông tin của Entity/Enum */
   private getEntityOrEnumDetails(
     filePath: string,
-    name: string
+    name: string,
   ): StructureItem[] {
     const sourceFile = this.project.addSourceFileAtPath(filePath);
     const entityClass = sourceFile.getClass(name);
     const enumDecl = sourceFile.getEnum(name);
 
     if (entityClass) {
-      return entityClass.getProperties().map((prop) => {
+      let properties: StructureItem[] = [];
+  
+      properties = entityClass.getProperties().map((prop) => {
         return new StructureItem(
           `🔹 ${prop.getName()} ${simplifyTypeName(prop.getType().getText())}`,
           vscode.TreeItemCollapsibleState.None,
           "property"
         );
       });
+  
+      const baseClass = entityClass.getBaseClass();
+      if (baseClass) {
+        const baseClassName = baseClass.getName();
+        if (baseClassName) {
+          const inheritedProperties = this.getEntityOrEnumDetails(filePath, baseClassName);
+  
+          if (!!inheritedProperties && inheritedProperties.length > 0) {
+            properties = [...properties, ...inheritedProperties];
+        }
+      }
+      return properties;
     }
+
+    return properties;
+  }
 
     if (enumDecl) {
       return enumDecl.getMembers().map((member) => {
